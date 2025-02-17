@@ -38,4 +38,38 @@ module.exports.Register = async(req,res)=>{
     }
 }
 
+module.exports.AllCandidates = async(req,res) =>{
+  try{
+    const candidates =await  Candidate.find({},'name party -_id');
+    if (!candidates.length) {
+      return res.status(200).json({ message: "No candidates found", candidates: [] });
+    }
+    res.status(200).json(candidates);
+  
+  }
+  catch(error){
+     console.log(error);
+     res.status(500).json({"err":"Internal Server Error"});
+  }
+}
+module.exports.VoteCount = async (req,res) =>{
+      try{
+      const candidates = await Candidate.find().sort({VoteCount :-1});
+      const voteRecord = candidates.map((x)=>{
+         return {
+          name:x.name,
+          party: x.party,
+          VoteCount:x.voteCount
+         }
+        
+         
+      })
+      res.status(200).json(voteRecord);
+    }
+    catch(error){
+      console.log(error);
+      res.status(500).json({msg : "Internal Server Error"});
 
+    }
+
+}
