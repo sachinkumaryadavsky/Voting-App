@@ -54,7 +54,7 @@ module.exports.AllCandidates = async(req,res) =>{
 }
 module.exports.VoteCount = async (req,res) =>{
       try{
-      const candidates = await Candidate.find().sort({VoteCount :-1});
+      const candidates = await Candidate.find().sort({voteCount :-1});
       const voteRecord = candidates.map((x)=>{
          return {
           name:x.name,
@@ -71,5 +71,55 @@ module.exports.VoteCount = async (req,res) =>{
       res.status(500).json({msg : "Internal Server Error"});
 
     }
+
+}
+
+module.exports.VoteCast = async(req,res)=>{
+  try{
+
+    //USER(Admin) can not cast any vote to  candidate
+        if (!req.user || !req.user.id) {
+            return res.status(403).json({ message: "User not authenticated" });
+        }
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        if((await checkAdminRole(userId)))
+        return res.status(403).json({message: 'user  have admin role, admin can not vote'});
+        
+        if(user.isVoted){
+            return res.json({msg:"User already voted "});
+        }
+      
+          
+          const {candidateId} = req.body;
+          const data = req.body;
+           if(!candidateId){
+             return res.json({msg:"candidate id is required"});
+           }
+          const candidate  = await Candidate.findById(candidateId);
+          if(!candidate){
+            return res.status(404).json({msg:"Candiadate  does not exist"});
+          }
+
+          candidate.votes.push({
+            user: userId,
+            votedAt: Date.now()
+          });
+          user.isVoted = true;
+
+          candidate.voteCount++;
+
+         await candidate.save();
+         await  user.save();
+          
+        
+          return res.status(200).json({name:candidate.name , party:candidate.party});
+
+
+  }
+  catch(error){
+    console.log(error);
+    res.status(500).json({msg:"Internal Server Erorr"});
+  }
 
 }
