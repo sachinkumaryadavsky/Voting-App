@@ -91,8 +91,8 @@ module.exports.VoteCast = async(req,res)=>{
         }
       
           
-          const {candidateId} = req.body;
-          const data = req.body;
+          const {candidateId} = req.params;
+          
            if(!candidateId){
              return res.json({msg:"candidate id is required"});
            }
@@ -114,6 +114,39 @@ module.exports.VoteCast = async(req,res)=>{
           
         
           return res.status(200).json({name:candidate.name , party:candidate.party});
+
+
+  }
+  catch(error){
+    console.log(error);
+    res.status(500).json({msg:"Internal Server Erorr"});
+  }
+
+}
+
+
+module.exports.DeleteCandidate = async(req,res)=>{
+  try{
+
+    //USER(Admin) can not cast any vote to  candidate
+        if (!req.user || !req.user.id) {
+            return res.status(404).json({ message: "User not authenticated" });
+        }
+        const userId = req.user.id;
+       
+        if(!(await checkAdminRole(userId)))
+        return res.status(403).json({ message: "User does not have admin role, only admins can delete candidates" });
+
+          
+          const {candidateId} = req.params;
+           const deletedcandidate = await Candidate.findByIdAndDelete(candidateId);
+
+         if(!deletedcandidate){
+            return res.status(404).json({msg:"Candidate not found"});
+         }
+         return res.status(200).json({msg:`Candidate ${candidateId} is deleted successfully `});
+        
+      
 
 
   }
