@@ -24,6 +24,11 @@ const candidateSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    photo:{
+
+        type:Buffer,
+        require:true
+    },
     voteCount:{
         type:Number,
         default:0

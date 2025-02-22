@@ -1,5 +1,6 @@
 const User =require("../models/user");
 const Candidate = require("../models/candidate");
+const upload = ("../middleware/upload.js");
 const bcrypt = require("bcrypt");
 const {jwtAuthMiddleware , generateToken} = require('../jwt');
 const checkAdminRole = async(userId)=>{
@@ -9,8 +10,8 @@ const checkAdminRole = async(userId)=>{
 }
 module.exports.Register = async(req,res)=>{
     try{
-      
-        
+
+
        // console.log("Request User:", req.user); // Debugging
        //USER(Admin) can add a new candidate
         if (!req.user || !req.user.id) {
@@ -18,6 +19,16 @@ module.exports.Register = async(req,res)=>{
         }
         if(!(await checkAdminRole(req.user.id)))
         return res.status(403).json({message: 'user does not have admin role'});
+
+        
+        if(!req.file){
+          res.status(404).json({msg:"File not available"});
+        }
+        const photo = req.file.buffer;
+      
+        if(!photo){
+          res.status(404).json({msg:"Photo not available"});
+        }
          
           const {aadharnumber} = req.body;
           const data = req.body;
@@ -27,7 +38,7 @@ module.exports.Register = async(req,res)=>{
           }
         
           
-          const user= await Candidate.create(data);
+          const candidate= await Candidate.create({...data,photo});
         
           return res.json(data);
           
